@@ -7,11 +7,11 @@
             "type": "String"
         },
         "connections_azuremonitorlogs_externalid": {
-            "defaultValue": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/azuremonitorlogs",
+            "defaultValue": "",
             "type": "String"
         },
         "connections_azuretables_externalid": {
-            "defaultValue": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/azuretables",
+            "defaultValue": "",
             "type": "String"
         }
     },
@@ -56,12 +56,12 @@
                                     "runAfter": {},
                                     "type": "Http",
                                     "inputs": {
-                                        "body": "client_id=57558d70-16ac-46cd-a3df-984cf46f9ad7\n&scope=api://6c619a22-b119-4067-b7dc-9afdb2cbf2ae/.default\n&client_secret=qUp8Q~p~CLnms3u.laWrAOXcreGDl3F3bzzdfa8~\n&grant_type=client_credentials",
+                                        "body": "{body}",
                                         "headers": {
                                             "Content-Type": "application/x-www-form-urlencoded"
                                         },
                                         "method": "POST",
-                                        "uri": "https://login.microsoftonline.com/875a7061-51b8-405d-915c-ab95dfd3df7c/oauth2/v2.0/token"
+                                        "uri": ""
                                     }
                                 },
                                 "HTTP": {
@@ -78,10 +78,10 @@
                                             "Content-Length": "<calculated when request is sent>",
                                             "Content-Type": "application/json",
                                             "Host": "<calculated when request is sent>",
-                                            "Ocp-Apim-Subscription-Key": "40296f78e2d34ac8bff9d8d43086ceb9"
+                                            "Ocp-Apim-Subscription-Key": ""
                                         },
                                         "method": "POST",
-                                        "uri": "https://apim-m10-prod.azure-api.net/errormanagement/api/error"
+                                        "uri": ""
                                     }
                                 },
                                 "Parse_JSON": {
@@ -152,7 +152,7 @@
                                     "resourcegroups": "rg-errormanagement-prod",
                                     "resourcename": "log-emgmt-prod",
                                     "resourcetype": "Log Analytics Workspace",
-                                    "subscriptions": "b705fb61-f867-4b72-bd24-82794ab8e50b",
+                                    "subscriptions": "",
                                     "timerange": "Set in query"
                                 }
                             },
@@ -228,12 +228,12 @@
                             "azuremonitorlogs": {
                                 "connectionId": "[parameters('connections_azuremonitorlogs_externalid')]",
                                 "connectionName": "azuremonitorlogs",
-                                "id": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/providers/Microsoft.Web/locations/westeurope/managedApis/azuremonitorlogs"
+                                "id": "/subscriptions/{subkey}/providers/Microsoft.Web/locations/westeurope/managedApis/azuremonitorlogs"
                             },
                             "azuretables": {
                                 "connectionId": "[parameters('connections_azuretables_externalid')]",
                                 "connectionName": "azuretables",
-                                "id": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/providers/Microsoft.Web/locations/westeurope/managedApis/azuretables"
+                                "id": "/subscriptions/{subkey}/providers/Microsoft.Web/locations/westeurope/managedApis/azuretables"
                             }
                         }
                     }
