@@ -4,7 +4,7 @@
     "parameters": {
         "workflows_logic_error_prod_name": {
             "defaultValue": "logic-error-prod",
-            "type": "String"
+            "type": "string"
         }
     },
     "variables": {},

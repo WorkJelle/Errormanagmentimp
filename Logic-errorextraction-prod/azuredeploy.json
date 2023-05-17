@@ -1,0 +1,244 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_logic_errorextraction_prod_name": {
+            "defaultValue": "logic-errorextraction-prod",
+            "type": "String"
+        },
+        "connections_azuremonitorlogs_externalid": {
+            "defaultValue": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/azuremonitorlogs",
+            "type": "String"
+        },
+        "connections_azuretables_externalid": {
+            "defaultValue": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/azuretables",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_logic_errorextraction_prod_name')]",
+            "location": "westeurope",
+            "tags": {
+                "log_Importance": "A"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "frequency": "Minute",
+                                "interval": 5
+                            },
+                            "evaluatedRecurrence": {
+                                "frequency": "Minute",
+                                "interval": 5
+                            },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "Check_if_'Extract_Error'_is_not_empty": {
+                            "actions": {
+                                "Get_Token": {
+                                    "runAfter": {},
+                                    "type": "Http",
+                                    "inputs": {
+                                        "body": "client_id=57558d70-16ac-46cd-a3df-984cf46f9ad7\n&scope=api://6c619a22-b119-4067-b7dc-9afdb2cbf2ae/.default\n&client_secret=qUp8Q~p~CLnms3u.laWrAOXcreGDl3F3bzzdfa8~\n&grant_type=client_credentials",
+                                        "headers": {
+                                            "Content-Type": "application/x-www-form-urlencoded"
+                                        },
+                                        "method": "POST",
+                                        "uri": "https://login.microsoftonline.com/875a7061-51b8-405d-915c-ab95dfd3df7c/oauth2/v2.0/token"
+                                    }
+                                },
+                                "HTTP": {
+                                    "runAfter": {
+                                        "Parse_JSON": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Http",
+                                    "inputs": {
+                                        "body": "@body('Extract_Error')?['value']",
+                                        "headers": {
+                                            "Authorization": "Bearer @{body('Parse_JSON')?['access_token']}",
+                                            "Content-Length": "<calculated when request is sent>",
+                                            "Content-Type": "application/json",
+                                            "Host": "<calculated when request is sent>",
+                                            "Ocp-Apim-Subscription-Key": "40296f78e2d34ac8bff9d8d43086ceb9"
+                                        },
+                                        "method": "POST",
+                                        "uri": "https://apim-m10-prod.azure-api.net/errormanagement/api/error"
+                                    }
+                                },
+                                "Parse_JSON": {
+                                    "runAfter": {
+                                        "Get_Token": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@body('Get_Token')",
+                                        "schema": {
+                                            "properties": {
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "ext_expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "token_type": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Extract_Error": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "not": {
+                                            "equals": [
+                                                "@length(body('Extract_Error')?['value'])",
+                                                0
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Extract_Error": {
+                            "runAfter": {
+                                "Update_ErrorTime": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": "AzureDiagnostics\n| where ResourceProvider == 'MICROSOFT.LOGIC'\n| where status_s == 'Failed'\n| where ResourceType == 'WORKFLOWS/RUNS'\n| where resource_workflowName_s !has ('customconnector')\n| where TimeGenerated between(datetime(@{body('Get_ErrorTime')?['ErrorTime']}) .. now())\n| summarize TimeGenerated = max(TimeGenerated) by runId = resource_runId_s, errorTime = startTime_t, resourceName = resource_workflowName_s, resourceGroup = ResourceGroup, priority = tags_log_Importance_s, errorCode = error_code_s, errorMessage = error_message_s, resourceId = ResourceId",
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/queryData",
+                                "queries": {
+                                    "resourcegroups": "rg-errormanagement-prod",
+                                    "resourcename": "log-emgmt-prod",
+                                    "resourcetype": "Log Analytics Workspace",
+                                    "subscriptions": "b705fb61-f867-4b72-bd24-82794ab8e50b",
+                                    "timerange": "Set in query"
+                                }
+                            },
+                            "description": "Twice error_code_s (alias: clientName, errorCode), To match the API endpoint request data, Data will be overwritten within API with Clientinformation"
+                        },
+                        "Get_ErrorTime": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent('Errorstamps')}/entities(PartitionKey='@{encodeURIComponent('EM')}',RowKey='@{encodeURIComponent('Last_Inserted')}')"
+                            }
+                        },
+                        "Save_DateTimeNow": {
+                            "runAfter": {
+                                "Get_ErrorTime": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "DateTimeNow",
+                                        "type": "string",
+                                        "value": "@{utcNow()}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Terminate": {
+                            "runAfter": {
+                                "Check_if_'Extract_Error'_is_not_empty": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Terminate",
+                            "inputs": {
+                                "runStatus": "Succeeded"
+                            }
+                        },
+                        "Update_ErrorTime": {
+                            "runAfter": {
+                                "Save_DateTimeNow": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "ErrorTime": "@{variables('DateTimeNow')}"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                    }
+                                },
+                                "method": "put",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/tables/@{encodeURIComponent('Errorstamps')}/entities(PartitionKey='@{encodeURIComponent('EM')}',RowKey='@{encodeURIComponent('Last_Inserted')}')"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azuremonitorlogs": {
+                                "connectionId": "[parameters('connections_azuremonitorlogs_externalid')]",
+                                "connectionName": "azuremonitorlogs",
+                                "id": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/providers/Microsoft.Web/locations/westeurope/managedApis/azuremonitorlogs"
+                            },
+                            "azuretables": {
+                                "connectionId": "[parameters('connections_azuretables_externalid')]",
+                                "connectionName": "azuretables",
+                                "id": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/providers/Microsoft.Web/locations/westeurope/managedApis/azuretables"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
