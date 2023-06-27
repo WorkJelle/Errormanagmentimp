@@ -1,0 +1,1895 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptions_642e7340c2dc550054070001_displayName": { // ###
+            "type": "SecureString"
+        },
+        "subscriptions_642e7340c2dc550054070002_displayName": { // ###
+            "type": "SecureString"
+        },
+        "users_1_lastName": {
+            "type": "SecureString"
+        },
+        "connections_jira_4_name": {
+            "defaultValue": "jira-4",
+            "type": "String"
+        },
+        "sites_errormanagementAPI_name": {
+            "defaultValue": "errormanagementAPI",
+            "type": "String"
+        },
+        "service_apim_m10_prod_name": {
+            "defaultValue": "apim-m10-prod",
+            "type": "String"
+        },
+        "workflows_logic_errorretrieval_prod_name": {
+            "defaultValue": "logic-errorretrieval-prod",
+            "type": "String"
+        },
+        "serverfarms_ASP_rgerrormanagementprod_8236_name": {
+            "defaultValue": "ASP-rgerrormanagementprod-8236",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[parameters('service_apim_m10_prod_name')]",
+            "location": "West Europe",
+            "sku": {
+                "name": "Developer",
+                "capacity": 1
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "publisherEmail": "jelle.stark@motion10.com", // ###
+                "publisherName": "Motion10", // ###
+                "notificationSenderEmail": "apimgmt-noreply@mail.windowsazure.com", // ###
+                "hostnameConfigurations": [
+                    {
+                        "type": "Proxy",
+                        "hostName": "[concat(parameters('service_apim_m10_prod_name'), '.azure-api.net')]",
+                        "negotiateClientCertificate": false,
+                        "defaultSslBinding": true,
+                        "certificateSource": "BuiltIn"
+                    }
+                ],
+                "customProperties": {
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11": "false",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10": "false",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11": "false",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10": "false",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30": "false",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2": "false",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168": "false",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30": "false"
+                },
+                "virtualNetworkType": "None",
+                "disableGateway": false,
+                "natGatewayState": "Disabled",
+                "apiVersionConstraint": {},
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_jira_4_name')]",
+            "location": "westeurope",
+            "kind": "V1",
+            "properties": {
+                "displayName": "ErrormangementJira",
+                "statuses": [
+                    {
+                        "status": "Connected"
+                    }
+                ],
+                "customParameterValues": {},
+                "nonSecretParameterValues": {
+                    "jirainstance": "motion10.atlassian.net", // ###
+                    "username": "jelle.stark@motion10.com" // ###
+                },
+                "createdTime": "2023-03-09T15:09:15.8456586Z",
+                "changedTime": "2023-03-09T15:09:15.8456586Z",
+                "api": {
+                    "name": "jira",
+                    "displayName": "JIRA",
+                    "description": "JIRA is a software development tool for agile teams to plan, track, and release world-class software. Connecting JIRA issues to the rest of your tools helps break down barriers and unleash the potential of your team.",
+                    "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1632/1.0.1632.3274/jira/icon.png",
+                    "brandColor": "#1F4F81",
+                    "id": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/providers/Microsoft.Web/locations/westeurope/managedApis/jira", // ###
+                    "type": "Microsoft.Web/locations/managedApis"
+                },
+                "testLinks": [
+                    {
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/', parameters('connections_jira_4_name'), '/extensions/proxy/oauth/token/accessible-resources?api-version=2016-06-01')]", // ###
+                        "method": "get"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('serverfarms_ASP_rgerrormanagementprod_8236_name')]",
+            "location": "West Europe",
+            "sku": {
+                "name": "F1",
+                "tier": "Free",
+                "size": "F1",
+                "family": "F",
+                "capacity": 0
+            },
+            "kind": "app",
+            "properties": {
+                "perSiteScaling": false,
+                "elasticScaleEnabled": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": false,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0,
+                "zoneRedundant": false
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/errormanagementapi')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "errormanagementAPI",
+                "apiRevision": "1",
+                "subscriptionRequired": true,
+                "path": "errormanagement",
+                "protocols": [
+                    "https"
+                ],
+                "authenticationSettings": {
+                    "oAuth2": {
+                        "authorizationServerId": "aad-oauth"
+                    },
+                    "oAuth2AuthenticationSettings": [
+                        {
+                            "authorizationServerId": "aad-oauth"
+                        }
+                    ],
+                    "openidAuthenticationSettings": []
+                },
+                "subscriptionKeyParameterNames": {
+                    "header": "Ocp-Apim-Subscription-Key",
+                    "query": "subscription-key"
+                },
+                "isCurrent": true
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/authorizationServers",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/aad-oauth')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "AAD-Oauth",
+                "clientRegistrationEndpoint": "https://localhost",
+                "authorizationEndpoint": "https://login.microsoftonline.com/875a7061-51b8-405d-915c-ab95dfd3df7c/oauth2/v2.0/authorize", // ###
+                "authorizationMethods": [
+                    "GET",
+                    "POST"
+                ],
+                "clientAuthenticationMethod": [
+                    "Body"
+                ],
+                "tokenBodyParameters": [],
+                "tokenEndpoint": "https://login.microsoftonline.com/875a7061-51b8-405d-915c-ab95dfd3df7c/oauth2/v2.0/token",
+                "useInTestConsole": true,
+                "useInApiDocumentation": false,
+                "supportState": false,
+                "defaultScope": "api://6c619a22-b119-4067-b7dc-9afdb2cbf2ae/user_impersonation", // ###
+                "grantTypes": [
+                    "authorizationCode"
+                ],
+                "bearerTokenSendingMethods": [
+                    "authorizationHeader"
+                ],
+                "clientId": "57558d70-16ac-46cd-a3df-984cf46f9ad7" // ###
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/backends",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/WebApp_errormanagementapi')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "description": "errormanagementAPI",
+                "url": "https://errormanagementapi.azurewebsites.net",
+                "protocol": "http",
+                "resourceId": "https://management.azure.com/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/sites/errormanagementAPI" // ###
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/administrators')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "Administrators",
+                "description": "Administrators is a built-in group containing the admin email account provided at the time of service creation. Its membership is managed by the system.",
+                "type": "system"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/developers')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "Developers",
+                "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
+                "type": "system"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/guests')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "Guests",
+                "description": "Guests is a built-in group. Its membership is managed by the system. Unauthenticated users visiting the developer portal fall into this group.",
+                "type": "system"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/notifications",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/AccountClosedPublisher')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/notifications",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/BCC')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/notifications",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/NewApplicationNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/notifications",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/NewIssuePublisherNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/notifications",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/PurchasePublisherNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/notifications",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/QuotaLimitApproachingPublisherNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/notifications",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/RequestPublisherNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/policies",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "value": "<!--\r\n    IMPORTANT:\r\n    - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n    - Only the <forward-request> policy element can appear within the <backend> section element.\r\n    - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n    - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n    - To add a policy position the cursor at the desired insertion point and click on the round button associated with the policy.\r\n    - To remove a policy, delete the corresponding policy statement from the policy document.\r\n    - Policies are applied in the order of their appearance, from the top down.\r\n-->\r\n<policies>\r\n  <inbound />\r\n  <backend>\r\n    <forward-request />\r\n  </backend>\r\n  <outbound />\r\n</policies>",
+                "format": "xml"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/portalconfigs",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "enableBasicAuth": true,
+                "signin": {
+                    "require": false
+                },
+                "signup": {
+                    "termsOfService": {
+                        "requireConsent": false
+                    }
+                },
+                "delegation": {
+                    "delegateRegistration": false,
+                    "delegateSubscription": false
+                },
+                "cors": {
+                    "allowedOrigins": []
+                },
+                "csp": {
+                    "mode": "disabled",
+                    "reportUri": [],
+                    "allowedSources": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/portalRevisions",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/20230418114815')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "isCurrent": true
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/portalsettings",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/delegation')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subscriptions": {
+                    "enabled": false
+                },
+                "userRegistration": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/portalsettings",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/signin')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "enabled": false
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/portalsettings",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/signup')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "enabled": true,
+                "termsOfService": {
+                    "enabled": false,
+                    "consentRequired": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "Starter",
+                "description": "Subscribers will be able to run 5 calls/minute up to a maximum of 100 calls/week.",
+                "subscriptionRequired": true,
+                "approvalRequired": false,
+                "subscriptionsLimit": 1,
+                "state": "published"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/unlimited')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "Unlimited",
+                "description": "Subscribers have completely unlimited access to the API. Administrator approval is required.",
+                "subscriptionRequired": true,
+                "approvalRequired": true,
+                "subscriptionsLimit": 1,
+                "state": "published"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/subscriptions",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/master')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "scope": "[concat(resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name')), '/')]",
+                "displayName": "Built-in all-access subscription",
+                "state": "active",
+                "allowTracing": false
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/AccountClosedDeveloper')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Thank you for using the $OrganizationName API!",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          On behalf of $OrganizationName and our customers we thank you for giving us a try. Your $OrganizationName API account is now closed.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Your $OrganizationName Team</p>\r\n    <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n    <p />\r\n  </body>\r\n</html>",
+                "title": "Developer farewell letter",
+                "description": "Developers receive this farewell email after they close their account.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/ApplicationApprovedNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Your application $AppName is published in the application gallery",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          We are happy to let you know that your request to publish the $AppName application in the application gallery has been approved. Your application has been published and can be viewed <a href=\"http://$DevPortalUrl/Applications/Details/$AppId\">here</a>.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+                "title": "Application gallery submission approved (deprecated)",
+                "description": "Developers who submitted their application for publication in the application gallery on the developer portal receive this email after their submission is approved.",
+                "parameters": [
+                    {
+                        "name": "AppId",
+                        "title": "Application id"
+                    },
+                    {
+                        "name": "AppName",
+                        "title": "Application name"
+                    },
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/ConfirmSignUpIdentityDefault')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Please confirm your new $OrganizationName API account",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you for joining the $OrganizationName API program! We host a growing number of cool APIs and strive to provide an awesome experience for API developers.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">First order of business is to activate your account and get you going. To that end, please click on the following link:</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a id=\"confirmUrl\" href=\"$ConfirmUrl\" style=\"text-decoration:none\">\r\n              <strong>$ConfirmUrl</strong>\r\n            </a>\r\n          </p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">If clicking the link does not work, please copy-and-paste or re-type it into your browser's address bar and hit \"Enter\".</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+                "title": "New developer account confirmation",
+                "description": "Developers receive this email to confirm their e-mail address after they sign up for a new account.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    },
+                    {
+                        "name": "ConfirmUrl",
+                        "title": "Developer activation URL"
+                    },
+                    {
+                        "name": "DevPortalHost",
+                        "title": "Developer portal hostname"
+                    },
+                    {
+                        "name": "ConfirmQuery",
+                        "title": "Query string part of the activation URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/EmailChangeIdentityDefault')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Please confirm the new email associated with your $OrganizationName API account",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">You are receiving this email because you made a change to the email address on your $OrganizationName API account.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Please click on the following link to confirm the change:</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a id=\"confirmUrl\" href=\"$ConfirmUrl\" style=\"text-decoration:none\">\r\n              <strong>$ConfirmUrl</strong>\r\n            </a>\r\n          </p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">If clicking the link does not work, please copy-and-paste or re-type it into your browser's address bar and hit \"Enter\".</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+                "title": "Email change confirmation",
+                "description": "Developers receive this email to confirm a new e-mail address after they change their existing one associated with their account.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    },
+                    {
+                        "name": "ConfirmUrl",
+                        "title": "Developer confirmation URL"
+                    },
+                    {
+                        "name": "DevPortalHost",
+                        "title": "Developer portal hostname"
+                    },
+                    {
+                        "name": "ConfirmQuery",
+                        "title": "Query string part of the confirmation URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/InviteUserNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "You are invited to join the $OrganizationName developer network",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Your account has been created. Please follow the link below to visit the $OrganizationName developer portal and claim it:\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <a href=\"$ConfirmUrl\">$ConfirmUrl</a>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+                "title": "Invite user",
+                "description": "An e-mail invitation to create an account, sent on request by API publishers.",
+                "parameters": [
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "ConfirmUrl",
+                        "title": "Confirmation link"
+                    },
+                    {
+                        "name": "DevPortalHost",
+                        "title": "Developer portal hostname"
+                    },
+                    {
+                        "name": "ConfirmQuery",
+                        "title": "Query string part of the confirmation link"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/NewCommentNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "$IssueName issue has a new comment",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">This is a brief note to let you know that $CommenterFirstName $CommenterLastName made the following comment on the issue $IssueName you created:</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">$CommentText</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          To view the issue on the developer portal click <a href=\"http://$DevPortalUrl/issues/$IssueId\">here</a>.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+                "title": "New comment added to an issue (deprecated)",
+                "description": "Developers receive this email when someone comments on the issue they created on the Issues page of the developer portal.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "CommenterFirstName",
+                        "title": "Commenter first name"
+                    },
+                    {
+                        "name": "CommenterLastName",
+                        "title": "Commenter last name"
+                    },
+                    {
+                        "name": "IssueId",
+                        "title": "Issue id"
+                    },
+                    {
+                        "name": "IssueName",
+                        "title": "Issue name"
+                    },
+                    {
+                        "name": "CommentText",
+                        "title": "Comment text"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/NewDeveloperNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Welcome to the $OrganizationName API!",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <h1 style=\"color:#000505;font-size:18pt;font-family:'Segoe UI'\">\r\n          Welcome to <span style=\"color:#003363\">$OrganizationName API!</span></h1>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Your $OrganizationName API program registration is completed and we are thrilled to have you as a customer. Here are a few important bits of information for your reference:</p>\r\n    <table width=\"100%\" style=\"margin:20px 0\">\r\n      <tr>\r\n            #if ($IdentityProvider == \"Basic\")\r\n            <td width=\"50%\" style=\"height:40px;vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n              Please use the following <strong>username</strong> when signing into any of the ${OrganizationName}-hosted developer portals:\r\n            </td><td style=\"vertical-align:top;font-family:'Segoe UI';font-size:12pt\"><strong>$DevUsername</strong></td>\r\n            #else\r\n            <td width=\"50%\" style=\"height:40px;vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n              Please use the following <strong>$IdentityProvider account</strong> when signing into any of the ${OrganizationName}-hosted developer portals:\r\n            </td><td style=\"vertical-align:top;font-family:'Segoe UI';font-size:12pt\"><strong>$DevUsername</strong></td>            \r\n            #end\r\n          </tr>\r\n      <tr>\r\n        <td style=\"height:40px;vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n              We will direct all communications to the following <strong>email address</strong>:\r\n            </td>\r\n        <td style=\"vertical-align:top;font-family:'Segoe UI';font-size:12pt\">\r\n          <a href=\"mailto:$DevEmail\" style=\"text-decoration:none\">\r\n            <strong>$DevEmail</strong>\r\n          </a>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best of luck in your API pursuits!</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <a href=\"http://$DevPortalUrl\">$DevPortalUrl</a>\r\n    </p>\r\n  </body>\r\n</html>",
+                "title": "Developer welcome letter",
+                "description": "Developers receive this “welcome” email after they confirm their new account.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "DevUsername",
+                        "title": "Developer user name"
+                    },
+                    {
+                        "name": "DevEmail",
+                        "title": "Developer email"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    },
+                    {
+                        "name": "IdentityProvider",
+                        "title": "Identity Provider selected by Organization"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/NewIssueNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Your request $IssueName was received",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you for contacting us. Our API team will review your issue and get back to you soon.</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Click this <a href=\"http://$DevPortalUrl/issues/$IssueId\">link</a> to view or edit your request.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Best,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n  </body>\r\n</html>",
+                "title": "New issue received (deprecated)",
+                "description": "This email is sent to developers after they create a new topic on the Issues page of the developer portal.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "IssueId",
+                        "title": "Issue id"
+                    },
+                    {
+                        "name": "IssueName",
+                        "title": "Issue name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/PasswordResetByAdminNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Your password was reset",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">The password of your $OrganizationName API account has been reset, per your request.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n                Your new password is: <strong>$DevPassword</strong></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Please make sure to change it next time you sign in.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+                "title": "Password reset by publisher notification (Password reset by admin)",
+                "description": "Developers receive this email when the publisher resets their password.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "DevPassword",
+                        "title": "New Developer password"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/PasswordResetIdentityDefault')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Your password change request",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <title>Letter</title>\r\n  </head>\r\n  <body>\r\n    <table width=\"100%\">\r\n      <tr>\r\n        <td>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\"></p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">You are receiving this email because you requested to change the password on your $OrganizationName API account.</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Please click on the link below and follow instructions to create your new password:</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a id=\"resetUrl\" href=\"$ConfirmUrl\" style=\"text-decoration:none\">\r\n              <strong>$ConfirmUrl</strong>\r\n            </a>\r\n          </p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">If clicking the link does not work, please copy-and-paste or re-type it into your browser's address bar and hit \"Enter\".</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">$OrganizationName API Team</p>\r\n          <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n          </p>\r\n        </td>\r\n      </tr>\r\n    </table>\r\n  </body>\r\n</html>",
+                "title": "Password change confirmation",
+                "description": "Developers receive this email when they request a password change of their account. The purpose of the email is to verify that the account owner made the request and to provide a one-time perishable URL for changing the password.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    },
+                    {
+                        "name": "ConfirmUrl",
+                        "title": "Developer new password instruction URL"
+                    },
+                    {
+                        "name": "DevPortalHost",
+                        "title": "Developer portal hostname"
+                    },
+                    {
+                        "name": "ConfirmQuery",
+                        "title": "Query string part of the instruction URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/PurchaseDeveloperNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Your subscription to the $ProdName",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Greetings $DevFirstName $DevLastName!</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Thank you for subscribing to the <a href=\"http://$DevPortalUrl/products/$ProdId\"><strong>$ProdName</strong></a> and welcome to the $OrganizationName developer community. We are delighted to have you as part of the team and are looking forward to the amazing applications you will build using our API!\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Below are a few subscription details for your reference:</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <ul>\r\n            #if ($SubStartDate != \"\")\r\n            <li style=\"font-size:12pt;font-family:'Segoe UI'\">Start date: $SubStartDate</li>\r\n            #end\r\n            \r\n            #if ($SubTerm != \"\")\r\n            <li style=\"font-size:12pt;font-family:'Segoe UI'\">Subscription term: $SubTerm</li>\r\n            #end\r\n          </ul>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n            Visit the developer <a href=\"http://$DevPortalUrl/developer\">profile area</a> to manage your subscription and subscription keys\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">A couple of pointers to help get you started:</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <strong>\r\n        <a href=\"http://$DevPortalUrl/docs/services?product=$ProdId\">Learn about the API</a>\r\n      </strong>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The API documentation provides all information necessary to make a request and to process a response. Code samples are provided per API operation in a variety of languages. Moreover, an interactive console allows making API calls directly from the developer portal without writing any code.</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <strong>\r\n        <a href=\"http://$DevPortalUrl/applications\">Feature your app in the app gallery</a>\r\n      </strong>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">You can publish your application on our gallery for increased visibility to potential new users.</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n      <strong>\r\n        <a href=\"http://$DevPortalUrl/issues\">Stay in touch</a>\r\n      </strong>\r\n    </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          If you have an issue, a question, a suggestion, a request, or if you just want to tell us something, go to the <a href=\"http://$DevPortalUrl/issues\">Issues</a> page on the developer portal and create a new topic.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Happy hacking,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n    <a style=\"font-size:12pt;font-family:'Segoe UI'\" href=\"http://$DevPortalUrl\">$DevPortalUrl</a>\r\n  </body>\r\n</html>",
+                "title": "New subscription activated",
+                "description": "Developers receive this acknowledgement email after subscribing to a product.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "ProdId",
+                        "title": "Product ID"
+                    },
+                    {
+                        "name": "ProdName",
+                        "title": "Product name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "SubStartDate",
+                        "title": "Subscription start date"
+                    },
+                    {
+                        "name": "SubTerm",
+                        "title": "Subscription term"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/QuotaLimitApproachingDeveloperNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "You are approaching an API quota limit",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head>\r\n    <style>\r\n          body {font-size:12pt; font-family:\"Segoe UI\",\"Segoe WP\",\"Tahoma\",\"Arial\",\"sans-serif\";}\r\n          .alert { color: red; }\r\n          .child1 { padding-left: 20px; }\r\n          .child2 { padding-left: 40px; }\r\n          .number { text-align: right; }\r\n          .text { text-align: left; }\r\n          th, td { padding: 4px 10px; min-width: 100px; }\r\n          th { background-color: #DDDDDD;}\r\n        </style>\r\n  </head>\r\n  <body>\r\n    <p>Greetings $DevFirstName $DevLastName!</p>\r\n    <p>\r\n          You are approaching the quota limit on you subscription to the <strong>$ProdName</strong> product (primary key $SubPrimaryKey).\r\n          #if ($QuotaResetDate != \"\")\r\n          This quota will be renewed on $QuotaResetDate.\r\n          #else\r\n          This quota will not be renewed.\r\n          #end\r\n        </p>\r\n    <p>Below are details on quota usage for the subscription:</p>\r\n    <p>\r\n      <table>\r\n        <thead>\r\n          <th class=\"text\">Quota Scope</th>\r\n          <th class=\"number\">Calls</th>\r\n          <th class=\"number\">Call Quota</th>\r\n          <th class=\"number\">Bandwidth</th>\r\n          <th class=\"number\">Bandwidth Quota</th>\r\n        </thead>\r\n        <tbody>\r\n          <tr>\r\n            <td class=\"text\">Subscription</td>\r\n            <td class=\"number\">\r\n                  #if ($CallsAlert == true)\r\n                  <span class=\"alert\">$Calls</span>\r\n                  #else\r\n                  $Calls\r\n                  #end\r\n                </td>\r\n            <td class=\"number\">$CallQuota</td>\r\n            <td class=\"number\">\r\n                  #if ($BandwidthAlert == true)\r\n                  <span class=\"alert\">$Bandwidth</span>\r\n                  #else\r\n                  $Bandwidth\r\n                  #end\r\n                </td>\r\n            <td class=\"number\">$BandwidthQuota</td>\r\n          </tr>\r\n              #foreach ($api in $Apis)\r\n              <tr><td class=\"child1 text\">API: $api.Name</td><td class=\"number\">\r\n                  #if ($api.CallsAlert == true)\r\n                  <span class=\"alert\">$api.Calls</span>\r\n                  #else\r\n                  $api.Calls\r\n                  #end\r\n                </td><td class=\"number\">$api.CallQuota</td><td class=\"number\">\r\n                  #if ($api.BandwidthAlert == true)\r\n                  <span class=\"alert\">$api.Bandwidth</span>\r\n                  #else\r\n                  $api.Bandwidth\r\n                  #end\r\n                </td><td class=\"number\">$api.BandwidthQuota</td></tr>\r\n              #foreach ($operation in $api.Operations)\r\n              <tr><td class=\"child2 text\">Operation: $operation.Name</td><td class=\"number\">\r\n                  #if ($operation.CallsAlert == true)\r\n                  <span class=\"alert\">$operation.Calls</span>\r\n                  #else\r\n                  $operation.Calls\r\n                  #end\r\n                </td><td class=\"number\">$operation.CallQuota</td><td class=\"number\">\r\n                  #if ($operation.BandwidthAlert == true)\r\n                  <span class=\"alert\">$operation.Bandwidth</span>\r\n                  #else\r\n                  $operation.Bandwidth\r\n                  #end\r\n                </td><td class=\"number\">$operation.BandwidthQuota</td></tr>\r\n              #end\r\n              #end\r\n            </tbody>\r\n      </table>\r\n    </p>\r\n    <p>Thank you,</p>\r\n    <p>$OrganizationName API Team</p>\r\n    <a href=\"$DevPortalUrl\">$DevPortalUrl</a>\r\n    <p />\r\n  </body>\r\n</html>",
+                "title": "Developer quota limit approaching notification",
+                "description": "Developers receive this email to alert them when they are approaching a quota limit.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "ProdName",
+                        "title": "Product name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "SubPrimaryKey",
+                        "title": "Primary Subscription key"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    },
+                    {
+                        "name": "QuotaResetDate",
+                        "title": "Quota reset date"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/RejectDeveloperNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Your subscription request for the $ProdName",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          We would like to inform you that we reviewed your subscription request for the <strong>$ProdName</strong>.\r\n        </p>\r\n        #if ($SubDeclineReason == \"\")\r\n        <p style=\"font-size:12pt;font-family:'Segoe UI'\">Regretfully, we were unable to approve it, as subscriptions are temporarily suspended at this time.</p>\r\n        #else\r\n        <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Regretfully, we were unable to approve it at this time for the following reason:\r\n          <div style=\"margin-left: 1.5em;\"> $SubDeclineReason </div></p>\r\n        #end\r\n        <p style=\"font-size:12pt;font-family:'Segoe UI'\"> We truly appreciate your interest. </p><p style=\"font-size:12pt;font-family:'Segoe UI'\">All the best,</p><p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p><a style=\"font-size:12pt;font-family:'Segoe UI'\" href=\"http://$DevPortalUrl\">$DevPortalUrl</a></body>\r\n</html>",
+                "title": "Subscription request declined",
+                "description": "This email is sent to developers when their subscription requests for products requiring publisher approval is declined.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "SubDeclineReason",
+                        "title": "Reason for declining subscription"
+                    },
+                    {
+                        "name": "ProdName",
+                        "title": "Product name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/templates",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/RequestDeveloperNotificationMessage')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "subject": "Your subscription request for the $ProdName",
+                "body": "<!DOCTYPE html >\r\n<html>\r\n  <head />\r\n  <body>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Dear $DevFirstName $DevLastName,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          Thank you for your interest in our <strong>$ProdName</strong> API product!\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">\r\n          We were delighted to receive your subscription request. We will promptly review it and get back to you at <strong>$DevEmail</strong>.\r\n        </p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">Thank you,</p>\r\n    <p style=\"font-size:12pt;font-family:'Segoe UI'\">The $OrganizationName API Team</p>\r\n    <a style=\"font-size:12pt;font-family:'Segoe UI'\" href=\"http://$DevPortalUrl\">$DevPortalUrl</a>\r\n  </body>\r\n</html>",
+                "title": "Subscription request received",
+                "description": "This email is sent to developers to acknowledge receipt of their subscription requests for products requiring publisher approval.",
+                "parameters": [
+                    {
+                        "name": "DevFirstName",
+                        "title": "Developer first name"
+                    },
+                    {
+                        "name": "DevLastName",
+                        "title": "Developer last name"
+                    },
+                    {
+                        "name": "DevEmail",
+                        "title": "Developer email"
+                    },
+                    {
+                        "name": "ProdName",
+                        "title": "Product name"
+                    },
+                    {
+                        "name": "OrganizationName",
+                        "title": "Organization name"
+                    },
+                    {
+                        "name": "DevPortalUrl",
+                        "title": "Developer portal URL"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/users",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "firstName": "Administrator",
+                "email": "jelle.stark@motion10.com", // ###
+                "state": "active", 
+                "identities": [
+                    {
+                        "provider": "Azure", // ###
+                        "id": "jelle.stark@motion10.com" // ###
+                    }
+                ],
+                "lastName": "[parameters('users_1_lastName')]"
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_logic_errorretrieval_prod_name')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('connections_jira_4_name'))]"
+            ],
+            "tags": {
+                "log_Importance": "A"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "items": {
+                                        "properties": {
+                                            "errorTime": {
+                                                "type": "string"
+                                            },
+                                            "errors": {
+                                                "items": {
+                                                    "properties": {
+                                                        "errorCode": {
+                                                            "type": "string"
+                                                        },
+                                                        "errorMessage": {
+                                                            "type": "string"
+                                                        },
+                                                        "link": {
+                                                            "type": "string"
+                                                        },
+                                                        "runId": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "runId",
+                                                        "errorCode",
+                                                        "errorMessage",
+                                                        "link"
+                                                    ],
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "occurence": {
+                                                "type": "integer"
+                                            },
+                                            "priority": {
+                                                "type": "string"
+                                            },
+                                            "resourceGroup": {
+                                                "type": "string"
+                                            },
+                                            "resourceName": {
+                                                "type": "string"
+                                            },
+                                            "summary": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "errorTime",
+                                            "resourceName",
+                                            "resourceGroup",
+                                            "errors",
+                                            "priority",
+                                            "occurence",
+                                            "summary"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "For_each": {
+                            "foreach": "@triggerBody()",
+                            "actions": {
+                                "Create_Issue": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": {
+                                            "fields": {
+                                                "description": "Resourcegroup: @{items('For_each')['resourceGroup']}\nTime error occured: @{items('For_each')['errorTime']}\n\n@{items('For_each')['summary']}",
+                                                "summary": "@{items('For_each')['occurence']} Error(s) in @{items('For_each')['resourceName']}"
+                                            }
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['jira']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/v2/issue",
+                                        "queries": {
+                                            "issueTypeIds": "10001",
+                                            "projectKey": "TA20"
+                                        }
+                                    }
+                                },
+                                "Edit_Issue": {
+                                    "runAfter": {
+                                        "Create_Issue": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": {
+                                            "fields": {
+                                                "priority": {
+                                                    "name": "@items('For_each')['priority']"
+                                                }
+                                            }
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['jira']['connectionId']"
+                                            }
+                                        },
+                                        "method": "put",
+                                        "path": "/3/issue/@{encodeURIComponent(body('Create_Issue')?['id'])}"
+                                    }
+                                }
+                            },
+                            "runAfter": {},
+                            "type": "Foreach"
+                        },
+                        "Terminate": {
+                            "runAfter": {
+                                "For_each": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Terminate",
+                            "inputs": {
+                                "runStatus": "Succeeded"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "jira": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_jira_4_name'))]",
+                                "connectionName": "jira-4",
+                                "id": "/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/providers/Microsoft.Web/locations/westeurope/managedApis/jira" // ###
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('sites_errormanagementAPI_name')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_ASP_rgerrormanagementprod_8236_name'))]"
+            ],
+            "tags": {
+                "log_Importance": "A"
+            },
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "errormanagementapi.azurewebsites.net",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "errormanagementapi.scm.azurewebsites.net",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_ASP_rgerrormanagementprod_8236_name'))]",
+                "reserved": false,
+                "isXenon": false,
+                "hyperV": false,
+                "vnetRouteAllEnabled": false,
+                "vnetImagePullEnabled": false,
+                "vnetContentShareEnabled": false,
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": false,
+                    "http20Enabled": false,
+                    "functionAppScaleLimit": 0,
+                    "minimumElasticInstanceCount": 0
+                },
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "clientCertMode": "Required",
+                "hostNamesDisabled": false,
+                "customDomainVerificationId": "2A5668A4AA656EE8729E42AC840EDD9518D6E83F6735EFE433C3262FBA34FBDC",
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": true,
+                "redundancyMode": "None",
+                "publicNetworkAccess": "Enabled",
+                "storageAccountRequired": false,
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/ftp')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "tags": {
+                "log_Importance": "A"
+            },
+            "properties": {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/scm')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "tags": {
+                "log_Importance": "A"
+            },
+            "properties": {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/web')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "tags": {
+                "log_Importance": "A"
+            },
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v6.0",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "remoteDebuggingVersion": "VS2019",
+                "httpLoggingEnabled": false,
+                "acrUseManagedIdentityCreds": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$errormanagementAPI",
+                "scmType": "None",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetRouteAllEnabled": false,
+                "vnetPrivatePortsCount": 0,
+                "publicNetworkAccess": "Enabled",
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "scmMinTlsVersion": "1.2",
+                "ftpsState": "FtpsOnly",
+                "preWarmedInstanceCount": 0,
+                "elasticWebAppScaleLimit": 0,
+                "functionsRuntimeScaleMonitoringEnabled": false,
+                "minimumElasticInstanceCount": 0,
+                "azureStorageAccounts": {}
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/14bc3dc4db55485e9d53789b39f62933')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"4e2f9b88ab102798ac6e25d8306ec3df434d5f86\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #8 from WorkJelle/Development\\n\\nAdded Condense function\"}", // ###
+                "start_time": "2023-04-12T08:22:03.9596413Z",
+                "end_time": "2023-04-12T08:22:09.4752654Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/2016db08679b4c388c94b012eb2488b7')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"df9942961bb08a1d331df7d9b226883f441696eb\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Update azure-webapps-dotnet-core.yml\"}",
+                "start_time": "2023-05-09T13:49:21.3949668Z",
+                "end_time": "2023-05-09T13:49:26.8954974Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/41e5d4a5afb247fa8b57450bcd38a557')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"d65f6995e664571a3eb09a969e4c0a85fa2125ec\",\"repoName\":\"WorkJelle/ErrorManagement\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #6 from WorkJelle/Development\\n\\nDevelopment\"}",
+                "start_time": "2023-03-21T10:56:35.9331829Z",
+                "end_time": "2023-03-21T10:56:39.5272804Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/809bcb415c8b4a24a10328286abf95cc')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"719542594edc69854bf4e87108200095675a88b1\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #14 from WorkJelle/Development\\n\\nAdded better html view\"}",
+                "start_time": "2023-05-17T07:21:37.3014109Z",
+                "end_time": "2023-05-17T07:21:58.9107259Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/9c0501b6a97244d18c769bb2f0da8702')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"4fd2d3347a16fe873e20f4b6ea365bab8bafa5c5\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #16 from WorkJelle/Development\\n\\nRemoved commenting\"}",
+                "start_time": "2023-06-01T08:45:26.3919051Z",
+                "end_time": "2023-06-01T08:45:38.2213533Z",
+                "active": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/d456545154b940ae9f50defde0634885')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"619be361e5e06e5c772159437eb1dbb4dc7cfd25\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #15 from WorkJelle/Development\\n\\nUpdated domain\"}",
+                "start_time": "2023-06-01T08:26:12.7217637Z",
+                "end_time": "2023-06-01T08:26:23.59683Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/da747548dc42481594121d2507641303')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"b25f7ce87fba9761ba36414695cec44ffe15f2dd\",\"repoName\":\"WorkJelle/ErrorManagement\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #7 from WorkJelle/Development\\n\\nDevelopment\"}",
+                "start_time": "2023-03-21T15:02:37.6205503Z",
+                "end_time": "2023-03-21T15:02:41.2607348Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/dce8fe80297e46ca875c5d38cfc3b50f')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"216d84ab540f23ab6535b41945b8575c662f62db\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #9 from WorkJelle/Development\\n\\nUpdated Error with ref links\"}",
+                "start_time": "2023-04-18T07:31:23.4778908Z",
+                "end_time": "2023-04-18T07:31:28.9154727Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/e3c9f90a787444a5a6eb47984c1189e8')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"8d1e19e88ce06eff30cf783dcee23273f5c6f0ce\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #12 from WorkJelle/Development\\n\\nDevelopment\"}",
+                "start_time": "2023-05-09T13:50:34.562331Z",
+                "end_time": "2023-05-09T13:50:50.6560841Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/edf31b09445644e398d931c0d70873d9')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"4a4a05b616f22a85846699d9a86f414a76371e93\",\"repoName\":\"WorkJelle/ErrorManagement\",\"actor\":\"WorkJelle\",\"slotName\":\"production\",\"commitMessage\":\"Merge pull request #13 from WorkJelle/Development\\n\\nUpdated Format\"}",
+                "start_time": "2023-05-15T09:17:06.853119Z",
+                "end_time": "2023-05-15T09:17:15.4779325Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('sites_errormanagementAPI_name'), '/', parameters('sites_errormanagementAPI_name'), '.azurewebsites.net')]",
+            "location": "West Europe",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_errormanagementAPI_name'))]"
+            ],
+            "properties": {
+                "siteName": "errormanagementAPI",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/operations",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/errormanagementapi/643e4cce73fb7c35db28a49d')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_apim_m10_prod_name'), 'errormanagementapi')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "displayName": "errormanagementapi_POST",
+                "method": "POST",
+                "urlTemplate": "/api/Error",
+                "templateParameters": [],
+                "request": {
+                    "queryParameters": [],
+                    "headers": [],
+                    "representations": [
+                        {
+                            "contentType": "application/json",
+                            "examples": {
+                                "default": {
+                                    "value": [
+                                        {
+                                            "runId": "string",
+                                            "errorTime": "string",
+                                            "resourceName": "string",
+                                            "resourceGroup": "string",
+                                            "priority": "string",
+                                            "errorCode": "string",
+                                            "errorMessage": "string",
+                                            "TimeGenerated": "string",
+                                            "ResourceId": "string"
+                                        }
+                                    ]
+                                }
+                            },
+                            "schemaId": "1681804683502",
+                            "typeName": "Array Input"
+                        }
+                    ]
+                },
+                "responses": []
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/policies",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/errormanagementapi/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_apim_m10_prod_name'), 'errormanagementapi')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "value": "<policies>\r\n  <inbound>\r\n    <base />\r\n    <set-backend-service id=\"apim-generated-policy\" backend-id=\"WebApp_errormanagementapi\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>",
+                "format": "xml"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/schemas",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/errormanagementapi/1681804683502')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_apim_m10_prod_name'), 'errormanagementapi')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "contentType": "application/vnd.oai.openapi.components+json",
+                "document": {}
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/groups/users",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/administrators/1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'administrators')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/groups/users",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/developers/1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'developers')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter/administrators')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/unlimited/administrators')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter/developers')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/unlimited/developers')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter/guests')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groups",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/unlimited/guests')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/policies",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "value": "<!--\r\n            IMPORTANT:\r\n            - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n            - Only the <forward-request> policy element can appear within the <backend> section element.\r\n            - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n            - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n            - To add a policy position the cursor at the desired insertion point and click on the round button associated with the policy.\r\n            - To remove a policy, delete the corresponding policy statement from the policy document.\r\n            - Position the <base> element within a section element to inherit all policies from the corresponding section element in the enclosing scope.\r\n            - Remove the <base> element to prevent inheriting policies from the corresponding section element in the enclosing scope.\r\n            - Policies are applied in the order of their appearance, from the top down.\r\n        -->\r\n<policies>\r\n  <inbound>\r\n    <rate-limit calls=\"5\" renewal-period=\"60\" />\r\n    <quota calls=\"100\" renewal-period=\"604800\" />\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n</policies>",
+                "format": "xml"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/errormanagementapi/643e4cce73fb7c35db28a49d/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('service_apim_m10_prod_name'), 'errormanagementapi', '643e4cce73fb7c35db28a49d')]",
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_apim_m10_prod_name'), 'errormanagementapi')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]"
+            ],
+            "properties": {
+                "value": "<!--\r\n    IMPORTANT:\r\n    - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n    - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n    - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n    - To add a policy, place the cursor at the desired insertion point and select a policy from the sidebar.\r\n    - To remove a policy, delete the corresponding policy statement from the policy document.\r\n    - Position the <base> element within a section element to inherit all policies from the corresponding section element in the enclosing scope.\r\n    - Remove the <base> element to prevent inheriting policies from the corresponding section element in the enclosing scope.\r\n    - Policies are applied in the order of their appearance, from the top down.\r\n    - Comments within policy elements are not supported and may disappear. Place your comments between policy elements or at a higher level scope.\r\n-->\r\n<policies>\r\n  <inbound>\r\n    <validate-jwt header-name=\"Authorization\" failed-validation-httpcode=\"403\" failed-validation-error-message=\"Unauthorized. Access token is missing or invalid.\">\r\n      <openid-config url=\"https://login.microsoftonline.com/875a7061-51b8-405d-915c-ab95dfd3df7c/v2.0/.well-known/openid-configuration\" />\r\n      <required-claims>\r\n        <claim name=\"roles\">\r\n          <value>Api.ReadWrite</value>\r\n        </claim>\r\n      </required-claims>\r\n    </validate-jwt>\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>",
+                "format": "xml"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groupLinks",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter/6A0B0D3C-07DB-4F2C-BED0-0BD96BE680BC')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'guests')]"
+            ],
+            "properties": {
+                "groupId": "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'guests')]"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groupLinks",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter/94C548D2-6BD3-4415-A49C-5CDF2E37DF8B')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'developers')]"
+            ],
+            "properties": {
+                "groupId": "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'developers')]"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groupLinks",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/unlimited/AE8E2FBB-209F-4AC0-8A75-0C00AAEA86A0')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'developers')]"
+            ],
+            "properties": {
+                "groupId": "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'developers')]"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groupLinks",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/unlimited/CA853A80-9CBF-49D6-B129-CF226BD277E9')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'guests')]"
+            ],
+            "properties": {
+                "groupId": "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'guests')]"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groupLinks",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/unlimited/E127D308-BD8D-4E96-A3C3-FBF5D16DD562')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'administrators')]"
+            ],
+            "properties": {
+                "groupId": "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'administrators')]"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/products/groupLinks",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/starter/F1335F28-BBEA-4219-8068-961A1738B9B2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'administrators')]"
+            ],
+            "properties": {
+                "groupId": "[resourceId('Microsoft.ApiManagement/service/groups', parameters('service_apim_m10_prod_name'), 'administrators')]"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/subscriptions",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/642e7340c2dc550054070001')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/users', parameters('service_apim_m10_prod_name'), '1')]",
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]"
+            ],
+            "properties": {
+                "ownerId": "[resourceId('Microsoft.ApiManagement/service/users', parameters('service_apim_m10_prod_name'), '1')]",
+                "scope": "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'starter')]",
+                "state": "active",
+                "allowTracing": false,
+                "displayName": "[parameters('subscriptions_642e7340c2dc550054070001_displayName')]"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/subscriptions",
+            "apiVersion": "2022-09-01-preview",
+            "name": "[concat(parameters('service_apim_m10_prod_name'), '/642e7340c2dc550054070002')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_m10_prod_name'))]",
+                "[resourceId('Microsoft.ApiManagement/service/users', parameters('service_apim_m10_prod_name'), '1')]",
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]"
+            ],
+            "properties": {
+                "ownerId": "[resourceId('Microsoft.ApiManagement/service/users', parameters('service_apim_m10_prod_name'), '1')]",
+                "scope": "[resourceId('Microsoft.ApiManagement/service/products', parameters('service_apim_m10_prod_name'), 'unlimited')]",
+                "state": "active",
+                "allowTracing": false,
+                "displayName": "[parameters('subscriptions_642e7340c2dc550054070002_displayName')]"
+            }
+        }
+    ]
+}

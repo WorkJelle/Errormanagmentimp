@@ -2,16 +2,44 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "workflows_logic_errorextraction_prod_name": {
-            "defaultValue": "logic-errorextraction-prod",
+        "workflows_errorextraction_prod_name": {
+            "defaultValue": "logic-errorextraction-prod-1",
             "type": "String"
         },
-        "connections_azuremonitorlogs_externalid": {
-            "defaultValue": "",
+        "connections_azuretables_name": {
+            "defaultValue": "azuretables-1",
             "type": "String"
         },
-        "connections_azuretables_externalid": {
-            "defaultValue": "",
+        "resourcegroup_name": {
+            "defaultValue": "rg-errormanagement-prod-1",
+            "type": "String"
+        },
+        "APIManagementURI": {
+            "defaultValue": "https://apim-m10-prod.azure-api.net/errormanagement/api/error",
+            "type": "String"
+        },
+        "Ocp-Apim-Subscription-Key": {
+            "defaultValue": "40296f78e2d34ac8bff9d8d43086ceb9",
+            "type": "String"
+        },
+        "Token_ClientId": {
+            "defaultValue": "57558d70-16ac-46cd-a3df-984cf46f9ad7",
+            "type": "String"
+        },
+        "Token_Scope": {
+            "defaultValue": "api://6c619a22-b119-4067-b7dc-9afdb2cbf2ae/.default",
+            "type": "String"
+        },
+        "Token_Secret": {
+            "defaultValue": "qUp8Q~p~CLnms3u.laWrAOXcreGDl3F3bzzdfa8~",
+            "type": "String"
+        },
+        "Token_endpoint": {
+            "defaultValue": "https://login.microsoftonline.com/875a7061-51b8-405d-915c-ab95dfd3df7c/oauth2/v2.0/token",
+            "type": "String"
+        },        
+        "storageAccounts_stm10errortimeprod_name": {
+            "defaultValue": "stm10errortimeprod1",
             "type": "String"
         }
     },
@@ -20,13 +48,13 @@
         {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
-            "name": "[parameters('workflows_logic_errorextraction_prod_name')]",
+            "name": "[parameters('workflows_errorextraction_prod_name')]",
             "location": "westeurope",
             "tags": {
                 "log_Importance": "A"
             },
             "properties": {
-                "state": "Enabled",
+                "state": "Disabled",
                 "definition": {
                     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
                     "contentVersion": "1.0.0.0",
@@ -56,12 +84,12 @@
                                     "runAfter": {},
                                     "type": "Http",
                                     "inputs": {
-                                        "body": "{body}",
+                                        "body": "[concat('client_id=', parameters('Token_ClientId'), '\n&scope=', parameters('Token_Scope'), '\n&client_secret=', parameters('Token_Secret'), '\n&grant_type=client_credentials')]",
                                         "headers": {
                                             "Content-Type": "application/x-www-form-urlencoded"
                                         },
                                         "method": "POST",
-                                        "uri": ""
+                                        "uri": "[parameters('Token_endpoint')]"
                                     }
                                 },
                                 "HTTP": {
@@ -78,10 +106,10 @@
                                             "Content-Length": "<calculated when request is sent>",
                                             "Content-Type": "application/json",
                                             "Host": "<calculated when request is sent>",
-                                            "Ocp-Apim-Subscription-Key": ""
+                                            "Ocp-Apim-Subscription-Key": "[parameters('Ocp-Apim-Subscription-Key')]"
                                         },
                                         "method": "POST",
-                                        "uri": ""
+                                        "uri": "[parameters('APIManagementURI')]"
                                     }
                                 },
                                 "Parse_JSON": {
@@ -152,7 +180,7 @@
                                     "resourcegroups": "rg-errormanagement-prod",
                                     "resourcename": "log-emgmt-prod",
                                     "resourcetype": "Log Analytics Workspace",
-                                    "subscriptions": "",
+                                    "subscriptions": "[subscription().subscriptionId]",
                                     "timerange": "Set in query"
                                 }
                             },
@@ -226,14 +254,14 @@
                     "$connections": {
                         "value": {
                             "azuremonitorlogs": {
-                                "connectionId": "[parameters('connections_azuremonitorlogs_externalid')]",
+                                "connectionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/westeurope/managedApis/azuremonitorlogs')]", //###
                                 "connectionName": "azuremonitorlogs",
-                                "id": "/subscriptions/{subkey}/providers/Microsoft.Web/locations/westeurope/managedApis/azuremonitorlogs"
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/westeurope/managedApis/azuremonitorlogs')]"
                             },
                             "azuretables": {
-                                "connectionId": "[parameters('connections_azuretables_externalid')]",
-                                "connectionName": "azuretables",
-                                "id": "/subscriptions/{subkey}/providers/Microsoft.Web/locations/westeurope/managedApis/azuretables"
+                                "connectionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/westeurope/managedApis/', parameters('connections_azuretables_name'),'')]",
+                                "connectionName": "[parameters('connections_azuretables_name')]",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/westeurope/managedApis/', parameters('connections_azuretables_name'),'')]"
                             }
                         }
                     }
