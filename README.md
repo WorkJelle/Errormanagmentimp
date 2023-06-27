@@ -73,14 +73,16 @@ In de API bevind een Condense methode die de Log gegevens transformeert en overz
 ![CondenseMethod](img/Condensemethod.png)
 
 ## Implementation
-Voor het implementeren van het gehele systeem zijn er 2 straten ontwikkeld. Bij het deployen van deze implemenaties vinden verschillende parameters plaats die ingevuld moeten worden om de systemen met elkaar te verbinden. Denk hierbij aan:
+Voor het implementeren van het gehele systeem zijn er 2 straten ontwikkeld. 
+
+- **Klantenimplementatie**  
+Hierin zijn alle systemen die behoren tot de klantenimplementatie  
+
+- **Motion10implementatie**
+Hierin zijn alle systemen die behoren tot de klantenimplementatie  
+
+Bij het deployen van deze implemenaties vinden verschillende parameters plaats die ingevuld moeten worden om de systemen met elkaar te verbinden. Denk hierbij aan:
 
 - Clientcredentials
 - API management Subscription Key
 - Tokenendpoints
-
-- **Klantenimplementatie**  
-Hierin zijn alle systemen die behoren tot de klantenimplementatie
-
-- **Motion10implementatie**
-Hierin zijn alle systemen die behoren tot de klantenimplementatie 
