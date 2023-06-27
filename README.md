@@ -86,3 +86,6 @@ Bij het deployen van deze implemenaties vinden verschillende parameters plaats d
 - Clientcredentials
 - API management Subscription Key
 - Tokenendpoints
+
+## Video
+In de video is een korte demo van de gehele implementatie. Hierin kan je de werking zien en hoe het uiteindelijke resultaat in tot stand komt.
