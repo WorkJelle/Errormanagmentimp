@@ -3,39 +3,39 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "connections_azuretables_name": {
-            "defaultValue": "azuretables",
+            "defaultValue": "azuretables-1",
             "type": "String"
         },
         "workflows_logic_error_prod_name": {
-            "defaultValue": "logic-error-prod",
+            "defaultValue": "logic-error-prod-1",
             "type": "String"
         },
         "connections_azuremonitorlogs_name": {
-            "defaultValue": "azuremonitorlogs",
+            "defaultValue": "azuremonitorlogs-1",
             "type": "String"
         },
         "actionGroups_ErrorMail_Group_name": {
-            "defaultValue": "ErrorMail-Group",
+            "defaultValue": "ErrorMail-Group-1",
             "type": "String"
         },
         "workflows_logic_errorextraction_prod_name": {
-            "defaultValue": "logic-errorextraction-prod",
+            "defaultValue": "logic-errorextraction-prod-1",
             "type": "String"
         },
         "storageAccounts_stm10errortimeprod_name": {
-            "defaultValue": "stm10errortimeprod",
+            "defaultValue": "stm10errortimeprod-1",
             "type": "String"
         },
         "metricAlerts_ErrorInManagementChain_name": {
-            "defaultValue": "ErrorInManagementChain",
+            "defaultValue": "ErrorInManagementChain-1",
             "type": "String"
         },
         "workspaces_log_emgmt_prod_name": {
-            "defaultValue": "log-emgmt-prod",
+            "defaultValue": "log-emgmt-prod-1",
             "type": "String"
         },
         "solutions_LogicAppsManagement_log_emgmt_prod__name": {
-            "defaultValue": "LogicAppsManagement(log-emgmt-prod)",
+            "defaultValue": "LogicAppsManagement(log-emgmt-prod-1)",
             "type": "String"
         }
     },
@@ -47,7 +47,7 @@
             "name": "[parameters('actionGroups_ErrorMail_Group_name')]",
             "location": "GermanyWestCentral",
             "properties": {
-                "groupShortName": "ErrorMail-Gr",
+                "groupShortName": "ErrorMail-Gr-1",
                 "enabled": true,
                 "emailReceivers": [
                     {
@@ -243,7 +243,7 @@
                 },
                 "testLinks": [
                     {
-                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/', parameters('connections_azuretables_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
+                        "requestUri": "[concat('https://management.azure.com:443/',[subscription().subscriptionId],'subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/', parameters('connections_azuretables_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
                         "method": "get"
                     }
                 ]
