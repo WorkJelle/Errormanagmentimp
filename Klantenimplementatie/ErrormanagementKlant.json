@@ -243,7 +243,7 @@
                 },
                 "testLinks": [
                     {
-                        "requestUri": "[concat('https://management.azure.com:443/',[subscription().subscriptionId],'subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/', parameters('connections_azuretables_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/b705fb61-f867-4b72-bd24-82794ab8e50b/resourceGroups/rg-errormanagement-prod/providers/Microsoft.Web/connections/', parameters('connections_azuretables_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
                         "method": "get"
                     }
                 ]
