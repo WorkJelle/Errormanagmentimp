@@ -68,4 +68,19 @@ De infastructure die de gegevens stuurt naar de Logic.ErrorRetrieval. De connect
 - **Condense Methode**  
 In de API bevind een Condense methode die de Log gegevens transformeert en overzet naar de klassen. De Condense methode geeft ook een Default waarde aan de prioriteit en een extra bericht in de beschrijving mocht de prioriteit nog niet bestaan. De link naar de implementatie die de error genereert word hierin ook gebundeld.
 
+![CondenseMethode](img/CondenseMethode.png)
+
 ![CondenseMethod](img/Condensemethod.png)
+
+## Implementation
+Voor het implementeren van het gehele systeem zijn er 2 straten ontwikkeld. Bij het deployen van deze implemenaties vinden verschillende parameters plaats die ingevuld moeten worden om de systemen met elkaar te verbinden. Denk hierbij aan:
+
+- Clientcredentials
+- API management Subscription Key
+- Tokenendpoints
+
+- **Klantenimplementatie**  
+Hierin zijn alle systemen die behoren tot de klantenimplementatie
+
+- **Motion10implementatie**
+Hierin zijn alle systemen die behoren tot de klantenimplementatie 
