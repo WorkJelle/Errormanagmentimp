@@ -26,13 +26,13 @@ De storage voor de laatste runtime van een extractie
 
 Implementaties zonder kleur:
 
-- **Logic.Error** / Logic App
+- **Logic.Error** / Logic App  
 Een implementatie die expres fouten creëert 
-- **ErrorInManagementChain** / Alert
+- **ErrorInManagementChain** / Alert  
 Een alert wanneer een extractie mislukt is
-- **Errormanagementm10** / App Registry
+- **Errormanagementm10** / App Registry  
 De verantwoordelijke voor de token creatie
-- **ReadWriteClientApp** / App Registry
+- **ReadWriteClientApp** / App Registry  
 De onderliggende rol in de token
 
 
