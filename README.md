@@ -55,7 +55,7 @@ In de developmentview zijn de belangerijke systemen te zien met de onderliggende
 De API code is opgebouwd doormiddel van een clean-architectuur. Dit maakt de API gemakkelijk te beheren en uit te breiden. 
 
 - **Core.Domain**  
-De klassen waar de gegevens getransformeerd worden
+De klassen waar de gegevens naartoe getransformeerd worden
 - **Core.DomainService**  
 De methode die de bovenliggende projecten moeten implementeren
 - **ErrormanagementAPI**  
