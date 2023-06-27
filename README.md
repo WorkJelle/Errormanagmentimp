@@ -9,19 +9,19 @@ Implementaties met kleur:
 
 - **Logic.ErrorExtraction** / Light Red  
 De Logic App die de errors ophaalt en verwerkt en daarna doorstuurt
-- **Logic.ErrorRetrieval** / Pink
+- **Logic.ErrorRetrieval** / Pink  
 De Logic App die uiteindelijk de errors opvangt en naar de JIRA api stuurt
-- **JIRA** / Light Gray
+- **JIRA** / Light Gray  
 De omgeving waar de gegevens terecht komen
-- **AAD** / Light Orange
+- **AAD** / Light Orange  
 De omgeving verantwoordelijk voor de veiligheid en token creatie
-- **Log-emgmt-prod** / Light Blue
+- **Log-emgmt-prod** / Light Blue  
 De omgeving waar de errors vandaan worden gehaald
-- **Apim-m10-prod** / Light Green
+- **Apim-m10-prod** / Light Green  
 Een API voor beveiliging van de motion10 omgeving
-- **ErrorManagementAPI** / Dark Yellow
+- **ErrorManagementAPI** / Dark Yellow  
 De API die de request verwerkt en comprimeert
-- **Stm10Errortimeprod** / Green
+- **Stm10Errortimeprod** / Green  
 De storage voor de laatste runtime van een extractie
 
 Implementaties zonder kleur:
@@ -54,18 +54,18 @@ In de developmentview zijn de belangerijke systemen te zien met de onderliggende
 ### Logical View
 De API code is opgebouwd doormiddel van een clean-architectuur. Dit maakt de API gemakkelijk te beheren en uit te breiden. 
 
-- **Core.Domain**
+- **Core.Domain**  
 De klassen waar de gegevens getransformeerd worden
-- **Core.DomainService**
+- **Core.DomainService**  
 De methode die de bovenliggende projecten moeten implementeren
-- **ErrormanagementAPI**
+- **ErrormanagementAPI**  
 De API met de transformatie op de gegevens
-- **Infrastructure.API**
+- **Infrastructure.API**  
 De infastructure die de gegevens stuurt naar de Logic.ErrorRetrieval. De connectie kan in Azure bij Connectionstrings worden ingevoerd naar de desbetreffende HTTP URL endpoint. 
 
 ![Logical View](img/ProjectArchitectures-LogicalView.drawio.png)
 
-- **Condense Methode**
+- **Condense Methode**  
 In de API bevind een Condense methode die de Log gegevens transformeert en overzet naar de klassen. De Condense methode geeft ook een Default waarde aan de prioriteit en een extra bericht in de beschrijving mocht de prioriteit nog niet bestaan. De link naar de implementatie die de error genereert word hierin ook gebundeld.
 
 ![CondenseMethod](img/Condensemethod.png)
